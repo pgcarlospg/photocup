@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tremor customization to match Mensa theme */
+@layer base {
+  :root {
+    --tremor-brand: 5, 44, 101; /* #052C65 */
+    --tremor-content-emphasis: 5, 44, 101;
+    --tremor-brand-inverted: 250, 170, 0; /* #FAAA00 */
+    --background: 226 50% 10%; /* Very dark blue for background */
+    --foreground: 0 0% 100%;
+  }
+}
+
+@layer components {
+  /* Glassmorphism utility */
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  .grad-mensa {
+    background: linear-gradient(135deg, #052C65 0%, #0a3d8a 50%, #FAAA00 100%);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  /* Neumorphism Components */
+  .neomorph-card {
+    @apply bg-[#0a0f1a];
+    box-shadow: 
+      8px 8px 16px rgba(0, 0, 0, 0.4),
+      -8px -8px 16px rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+  }
+
+  .neomorph-card:hover {
+    box-shadow: 
+      12px 12px 24px rgba(0, 0, 0, 0.5),
+      -12px -12px 24px rgba(255, 255, 255, 0.03);
+  }
+
+  .neomorph-button {
+    @apply bg-mensa-orange;
+    box-shadow: 
+      6px 6px 12px rgba(0, 0, 0, 0.3),
+      -6px -6px 12px rgba(250, 170, 0, 0.1);
+  }
+
+  .neomorph-button:hover {
+    box-shadow: 
+      4px 4px 8px rgba(0, 0, 0, 0.4),
+      -4px -4px 8px rgba(250, 170, 0, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .neomorph-button:active {
+    box-shadow: 
+      inset 4px 4px 8px rgba(0, 0, 0, 0.4),
+      inset -4px -4px 8px rgba(250, 170, 0, 0.05);
+    transform: translateY(0);
+  }
+
+  .neomorph-tab {
+    @apply bg-transparent;
+    transition: all 0.3s ease;
+  }
+
+  .neomorph-tab:hover {
+    @apply bg-white/5;
+  }
+
+  .neomorph-badge {
+    @apply bg-[#0a0f1a];
+    box-shadow: 
+      inset 2px 2px 4px rgba(0, 0, 0, 0.3),
+      inset -2px -2px 4px rgba(255, 255, 255, 0.02);
+  }
+
+  .neomorph-progress {
+    @apply bg-[#0a0f1a];
+    box-shadow: 
+      inset 3px 3px 6px rgba(0, 0, 0, 0.4),
+      inset -3px -3px 6px rgba(255, 255, 255, 0.02);
+  }
+}
+
+@keyframes blob {
+  0% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0px, 0px) scale(1); }
+}
+
