@@ -3,7 +3,9 @@
  * Runs server-side inside Next.js — no CORS issues from the browser.
  */
 
-const BACKEND = 'http://localhost:5001/api/v1';
+// In Docker: BACKEND_URL=http://backend:5001 (set by docker-compose environment)
+// In local dev: BACKEND_URL=http://137.116.202.64:5001 (set by .env.local)
+const BACKEND = `${process.env.BACKEND_URL ?? 'http://localhost:5001'}/api/v1`;
 
 async function proxy(req: Request): Promise<Response> {
     const url = new URL(req.url);
