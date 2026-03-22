@@ -18,13 +18,16 @@ from app.models.user import User, UserRole
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# Paths — backend lives at photocup-platform/backend, project root is 2 levels up
-BACKEND_DIR = Path(__file__).resolve().parents[5]   # .../photocup-platform/backend
-PROJECT_ROOT = BACKEND_DIR.parents[1]               # .../Photocup_New
-PUBLIC_DIR = PROJECT_ROOT / "public"
-# SA file can be in project root or backend dir
-SA_FILE = (PROJECT_ROOT / "photocupapp-service-account.json") if (PROJECT_ROOT / "photocupapp-service-account.json").exists() \
-    else (BACKEND_DIR / "photocupapp-service-account.json")
+# Paths — resolve relative to this file; work both in Docker (/app) and dev layout
+_THIS_FILE = Path(__file__).resolve()
+# In Docker: /app/app/api/v1/endpoints/drive_sync.py  -> parents[4] = /app (backend root)
+# In dev:    .../photocup-platform/backend/app/api/v1/endpoints/drive_sync.py -> parents[4] = backend
+BACKEND_DIR = _THIS_FILE.parents[4]
+# Public dir: use env var if set, otherwise look one level above backend for Next.js public/
+_public_env = os.environ.get("PUBLIC_DIR", "")
+PUBLIC_DIR = Path(_public_env) if _public_env else (BACKEND_DIR.parent / "public")
+# SA file
+SA_FILE = BACKEND_DIR / "photocupapp-service-account.json"
 
 # Files to keep in sync: (drive_file_id, public_filename)
 SYNC_ASSETS = [
