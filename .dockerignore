@@ -3,7 +3,9 @@ node_modules
 .git
 *.md
 .gitignore
+photocup-platform/frontend
 photocup-platform/backend/venv
+photocup-platform/backend/venv_new
 photocup-platform/backend/uploads
 photocup-platform/backend/photocup.db
 photocup-platform/backend/__pycache__
