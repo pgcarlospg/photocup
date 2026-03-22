@@ -23,6 +23,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
+# BACKEND_URL is overridden at runtime by docker-compose environment.
+# Declaring it here ensures Next.js standalone picks it up correctly.
+ENV BACKEND_URL=http://backend:5001
 
 # Copy standalone output
 COPY --from=builder /app/.next/standalone ./

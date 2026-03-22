@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+const backendUrl = (process.env.BACKEND_URL || 'http://localhost:5001').replace(/\/$/, '');
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -21,10 +21,13 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      {
-        source: '/api/v1/:path*',
-        destination: `${backendUrl}/api/v1/:path*`,
-      },
+      // NOTE: /api/v1/* is intentionally NOT here — it is handled by the route
+      // handler at src/app/api/v1/[...path]/route.ts which takes priority over
+      // rewrites in Next.js App Router.  Adding it here would be a no-op but
+      // makes the intent clearer and avoids confusion.
+      //
+      // /uploads/* has NO route handler, so it needs a rewrite for local dev.
+      // In production nginx handles this directly (backend:5001/uploads/*).
       {
         source: '/uploads/:path*',
         destination: `${backendUrl}/uploads/:path*`,

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Navbar } from '@/components/Navbar';
 import { Lock, User, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -24,7 +25,18 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login } = useAuth();
+    const { login, role, isReady } = useAuth();
+    const router = useRouter();
+
+    // Navigate once the AuthProvider has committed the new role to React state.
+    // Using a useEffect guarantees that all setState calls inside login() have
+    // been applied before we navigate — eliminating the race condition where
+    // RouteGuard would see role=null and bounce the user back to /login.
+    useEffect(() => {
+        if (!isReady || !role) return;
+        const dest = DESTINATIONS[role as FrontendRole];
+        if (dest) router.push(dest);
+    }, [isReady, role, router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,11 +44,9 @@ export default function LoginPage() {
         setError('');
         setLoading(true);
         try {
-            const r = await login(email, password);
-            // Full page reload: guarantees AuthProvider re-reads localStorage before
-            // RouteGuard runs, avoiding the React state-commit race that bounced PC
-            // users back to /login.
-            window.location.href = DESTINATIONS[r] ?? '/';
+            await login(email, password);
+            // Navigation is handled by the useEffect above, which fires after
+            // React has flushed the role state update from login().
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Login failed. Check credentials.');
             setLoading(false);
