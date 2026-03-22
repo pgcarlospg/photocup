@@ -303,11 +303,13 @@ export default function CoordinatorDashboard() {
                           }}
                         />
                       </div>
+                      <div className="p-4 bg-white/5 border-t border-white/10">
+                        <h3 className="font-bold text-white truncate text-sm">{photo.title}</h3>
+                        <p className="text-xs text-mensa-orange font-bold mt-1">{photo.author}</p>
+                      </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h3 className="font-bold text-white truncate">{photo.title}</h3>
-                          <p className="text-sm text-gray-300">{photo.author}</p>
-                          <div className="flex items-center justify-between mt-2">
+                          <div className="flex items-center justify-between">
                             <Badge color="orange">{photo.category}</Badge>
                             <div className="flex gap-2">
                               <button 

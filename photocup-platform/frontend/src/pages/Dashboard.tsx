@@ -80,7 +80,7 @@ export default function Dashboard() {
   const fetchJudges = async () => {
     try {
       const response = await api.get("/photos/judges");
-      console.log("Jueces cargados desde API:", response.data);
+      console.log("Judges loaded from API:", response.data);
       setJudges(response.data);
       if (response.data.length > 0) {
         setSelectedJudge(response.data[0].id.toString());
@@ -93,7 +93,7 @@ export default function Dashboard() {
       try {
         const mockResponse = await fetch('/mock-judges.json');
         const mockData = await mockResponse.json();
-        console.log("Jueces cargados desde mock data:", mockData);
+        console.log("Judges loaded from mock data:", mockData);
         setJudges(mockData);
         if (mockData.length > 0) {
           setSelectedJudge(mockData[0].id.toString());
@@ -259,7 +259,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Obras Recibidas */}
+              {/* Received Works */}
               <div className="neomorph-card rounded-2xl p-6 hover:shadow-2xl transition-all group">
                 <div className="flex items-start justify-between mb-6">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-mensa-orange/20 to-amber-600/20 flex items-center justify-center neomorph-badge transition-transform group-hover:scale-110">
@@ -269,7 +269,7 @@ export default function Dashboard() {
                     <span className="text-mensa-orange text-xs font-bold">🔥 HOT</span>
                   </div>
                 </div>
-                <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Obras Enviadas</h3>
+                <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Submitted Works</h3>
                 <p className="text-white text-3xl font-bold mb-4">{stats.total_photos}</p>
                 <div className="flex items-center gap-2 text-xs">
                   <div className="flex-1 h-1.5 neomorph-progress rounded-full overflow-hidden">
@@ -280,7 +280,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Evaluaciones */}
+              {/* Evaluations */}
               <div className="neomorph-card rounded-2xl p-6 hover:shadow-2xl transition-all group">
                 <div className="flex items-start justify-between mb-6">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-mensa-orange/20 to-amber-600/20 flex items-center justify-center neomorph-badge transition-transform group-hover:scale-110">
@@ -304,7 +304,7 @@ export default function Dashboard() {
                     <Gavel className="w-7 h-7 text-mensa-orange" strokeWidth={2.5} />
                   </div>
                   <div className="neomorph-badge px-3 py-1.5 rounded-xl">
-                    <span className="text-mensa-orange text-xs font-bold">ACTIVO</span>
+                    <span className="text-mensa-orange text-xs font-bold">ACTIVE</span>
                   </div>
                 </div>
                 <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">Judges in Jury</h3>
@@ -507,6 +507,11 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <div className="p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] text-mensa-orange font-bold uppercase tracking-widest">
+                          {photo.owner?.full_name || "Anónimo"}
+                        </span>
+                      </div>
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-lg" title={photo.country || "Global"}>
                           {getFlagEmoji(photo.country || "Global")}
@@ -515,15 +520,7 @@ export default function Dashboard() {
                           {photo.title}
                         </h4>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full neomorph-badge flex items-center justify-center text-xs font-bold text-mensa-orange">
-                            {photo.owner?.full_name?.charAt(0) || "A"}
-                          </div>
-                          <span className="text-[10px] text-gray-500 font-semibold truncate max-w-[100px]">
-                            {photo.owner?.full_name || "Anónimo"}
-                          </span>
-                        </div>
+                      <div className="flex justify-between items-center opacity-70">
                         <span className="text-[10px] text-gray-600 font-semibold">
                           #{photo.id}
                         </span>
@@ -751,7 +748,7 @@ export default function Dashboard() {
 
           <TabPanel>
             <div className="flex flex-col gap-8 mt-6">
-              {/* BANNER DISTINTIVO PARA JUECES */}
+              {/* DISTINCTIVE JUDGES BANNER */}
               <div className="neomorph-card p-1 rounded-3xl bg-gradient-to-r from-mensa-orange to-amber-500 shadow-[0_0_40px_rgba(255,102,0,0.2)]">
                 <div className="bg-[#0A1224] rounded-[1.4rem] p-6 flex items-center justify-between">
                   <div className="flex items-center gap-6">
@@ -1213,13 +1210,13 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="text-center py-20 neomorph-card rounded-3xl bg-white/[0.01] border border-dashed border-white/10">
-                    <p className="text-gray-600 font-bold uppercase tracking-widest text-sm mb-4">No se ha seleccionado ningún juez</p>
-                    <p className="text-gray-700 text-xs">Elige un juez del desplegable superior para ver su informe detallado</p>
+                    <p className="text-gray-600 font-bold uppercase tracking-widest text-sm mb-4">No judge selected</p>
+                    <p className="text-gray-700 text-xs">Choose a judge from the dropdown above to see their detailed report</p>
                   </div>
                 )}
               </div>
 
-              {/* Gráficos Comparativos Globales */}
+              {/* Global Comparison Charts */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="neomorph-card rounded-[2rem] p-8 border border-white/5 bg-[#080d1a]">
                   <div className="flex items-center gap-3 mb-8">
@@ -1227,8 +1224,8 @@ export default function Dashboard() {
                       <BarChart3 className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-white text-lg font-black">Actividad del Panel</h3>
-                      <p className="text-gray-500 text-xs font-medium">Volumen de evaluaciones por juez</p>
+                      <h3 className="text-white text-lg font-black">Panel Activity</h3>
+                      <p className="text-gray-500 text-xs font-medium">Evaluation volume by judge</p>
                     </div>
                   </div>
                   {stats && stats.judge_performance && stats.judge_performance.length > 0 ? (

@@ -1,95 +1,193 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navbar } from '@/components/Navbar';
-import {
-    User, Settings, Image as ImageIcon,
-    Award, Clock, ExternalLink, MessageSquare
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { User, Image as ImageIcon, Clock, Plus, Trash2, AlertCircle, Camera } from 'lucide-react';
+import { useRouteGuard } from '@/components/RouteGuard';
+import { useAuth } from '@/lib/auth';
+import { apiGetMyPhotos, apiDeleteMyPhoto, photoUrl, MyPhoto } from '@/lib/api';
+import Link from 'next/link';
+
+const font = { fontFamily: 'var(--font-barlow)' };
+const fontDisplay = { fontFamily: 'var(--font-oswald)' };
+const fontBody = { fontFamily: 'var(--font-garamond)' };
+
+const MAX_PHOTOS = 3;
 
 export default function UserDashboard() {
-    return (
-        <main className="min-h-screen bg-[#050505] text-white">
-            <Navbar />
+    const authorized = useRouteGuard();
+    const { user } = useAuth();
 
-            <div className="pt-24 px-8 pb-12 max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row gap-8 mb-12">
-                    {/* Sidebar / Profile Summary */}
-                    <div className="w-full md:w-80 space-y-6">
-                        <div className="glass p-8 rounded-[2rem] border border-white/5 text-center">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-500 to-blue-500 mx-auto mb-6 p-1">
-                                <div className="w-full h-full rounded-full bg-black flex items-center justify-center p-2">
-                                    <User className="w-12 h-12 text-white" />
+    const [photos, setPhotos] = useState<MyPhoto[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [deleting, setDeleting] = useState<number | null>(null);
+
+    useEffect(() => {
+        if (!authorized) return;
+        apiGetMyPhotos()
+            .then(setPhotos)
+            .catch(e => setError(e.message))
+            .finally(() => setLoading(false));
+    }, [authorized]);
+
+    if (!authorized) return null;
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Delete this photo permanently?')) return;
+        setDeleting(id);
+        try {
+            await apiDeleteMyPhoto(id);
+            setPhotos(prev => prev.filter(p => p.id !== id));
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Delete failed');
+        } finally {
+            setDeleting(null);
+        }
+    };
+
+    const canSubmitMore = photos.length < MAX_PHOTOS;
+
+    return (
+        <main className="min-h-screen bg-[#080300]" style={{ color: '#F5E0C0' }}>
+            <Navbar />
+            <div className="pt-24 px-6 lg:px-12 pb-16 max-w-7xl mx-auto">
+
+                <div className="flex items-center gap-3 mb-10 pt-4">
+                    <div className="h-px w-8 bg-[#F5A623]" />
+                    <span className="text-[#F5A623] text-xs font-bold uppercase tracking-[0.3em]" style={font}>My Entry Hub · PhotoCup 2026</span>
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-6 mb-10">
+                    {/* Profile sidebar */}
+                    <div className="w-full md:w-64 flex-shrink-0 space-y-4">
+                        <div className="glass border border-[#C8860A]/15 p-7 text-center relative overflow-hidden"
+                             style={{ clipPath: 'polygon(0 0, 100% 0, 100% 94%, 94% 100%, 0 100%)' }}>
+                            <div className="absolute top-0 left-0 w-full h-0.5 grad-premium" />
+                            <div className="w-20 h-20 mx-auto mb-5 border-2 border-[#C8860A]/30 flex items-center justify-center"
+                                 style={{ background: 'linear-gradient(135deg, #C8860A22, #F5A62310)' }}>
+                                <User className="w-10 h-10 text-[#F5A623]" />
+                            </div>
+                            <h2 className="text-xl font-bold text-white" style={fontDisplay}>{user?.full_name ?? '—'}</h2>
+                            <p className="text-[#5A4020] text-sm mt-1" style={fontBody}>{user?.email}</p>
+                            {user?.country && (
+                                <p className="text-[#7A6040] text-xs mt-1 uppercase tracking-wider" style={font}>{user.country}</p>
+                            )}
+                            <div className="mt-5 pt-5 border-t border-[#C8860A]/10 flex gap-4 justify-center">
+                                <div>
+                                    <div className="text-2xl font-bold text-[#F5A623]" style={fontDisplay}>{photos.length}</div>
+                                    <div className="text-[10px] text-[#5A4020] uppercase tracking-widest" style={font}>submitted</div>
+                                </div>
+                                <div className="w-px bg-[#C8860A]/15" />
+                                <div>
+                                    <div className="text-2xl font-bold text-[#C8A070]" style={fontDisplay}>{MAX_PHOTOS - photos.length}</div>
+                                    <div className="text-[10px] text-[#5A4020] uppercase tracking-widest" style={font}>remaining</div>
                                 </div>
                             </div>
-                            <h2 className="text-2xl font-bold">Alex Rivera</h2>
-                            <p className="text-gray-500 text-sm mb-6">Mensa Spain • ES-8821</p>
-                            <button className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10 transition-all">
-                                Edit Profile
-                            </button>
                         </div>
 
-                        <div className="glass p-4 rounded-[1.5rem] border border-white/5 space-y-1">
-                            <SidebarLink icon={<ImageIcon />} label="My Submissions" active />
-                            <SidebarLink icon={<Award />} label="Achievements" />
-                            <SidebarLink icon={<MessageSquare />} label="Feedback" count={2} />
-                            <SidebarLink icon={<Settings />} label="Settings" />
-                        </div>
+                        {canSubmitMore ? (
+                            <Link href="/submit">
+                                <div className="glass border border-dashed border-[#C8860A]/20 p-5 text-center hover:border-[#F5A623]/40 transition-all cursor-pointer group">
+                                    <Plus className="w-6 h-6 text-[#5A4020] group-hover:text-[#F5A623] mx-auto mb-2 transition-colors" />
+                                    <p className="text-xs font-bold uppercase tracking-widest text-[#5A4020] group-hover:text-[#C8A070] transition-colors" style={font}>Submit New Photo</p>
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className="glass border border-[#C8860A]/10 p-5 text-center opacity-60">
+                                <Camera className="w-6 h-6 text-[#3A2A10] mx-auto mb-2" />
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#3A2A10]" style={font}>Max {MAX_PHOTOS} photos reached</p>
+                            </div>
+                        )}
+
+                        <Link href="/rules">
+                            <div className="glass border border-[#C8860A]/10 p-4 text-center hover:border-[#C8860A]/25 transition-all cursor-pointer group">
+                                <p className="text-xs font-bold uppercase tracking-widest text-[#5A4020] group-hover:text-[#C8A070] transition-colors" style={font}>View Rules &amp; T&amp;C</p>
+                            </div>
+                        </Link>
                     </div>
 
-                    {/* Main Content */}
-                    <div className="flex-1 space-y-8">
+                    {/* Main content */}
+                    <div className="flex-1 space-y-6">
                         <div>
-                            <h1 className="text-4xl font-bold italic mb-2">My Submissions</h1>
-                            <p className="text-gray-500">Manage your entries for the 2026 PhotoCup.</p>
+                            <h1 className="text-4xl font-bold text-white" style={fontDisplay}>My Submissions</h1>
+                            <p className="text-[#7A6040] text-sm mt-1" style={fontBody}>Your photos entered in PhotoCup 2026. Maximum {MAX_PHOTOS} entries per participant.</p>
                         </div>
 
-                        {/* Submissions Grid */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <SubmissionCard
-                                title="The Silent Enigma"
-                                status="Approved"
-                                date="Jan 12, 2026"
-                                img="https://images.unsplash.com/photo-1518005020251-095c1f00c653"
-                            />
-                            <SubmissionCard
-                                title="Urban Entropy"
-                                status="In Review"
-                                date="Jan 20, 2026"
-                                img="https://images.unsplash.com/photo-1502657877623-f66bf489d236"
-                            />
-
-                            {/* Empty Slot */}
-                            <div className="border-2 border-dashed border-white/5 rounded-[2rem] flex flex-col items-center justify-center p-12 group hover:border-purple-500/30 transition-colors">
-                                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <ImageIcon className="text-gray-600 group-hover:text-purple-400" />
-                                </div>
-                                <h4 className="font-bold text-gray-500">Available Slot</h4>
-                                <p className="text-xs text-gray-600 mb-6 font-mono uppercase tracking-widest">1 Entry Remaining</p>
-                                <button className="px-6 py-2.5 rounded-full grad-premium text-white text-sm font-bold shadow-lg shadow-purple-500/10">
-                                    Fill Slot
-                                </button>
+                        {error && (
+                            <div className="flex items-center gap-3 text-red-400 border border-red-800/30 bg-red-900/10 px-4 py-3">
+                                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                <p className="text-xs" style={font}>{error}</p>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Recent Activity */}
-                        <div className="glass rounded-[2rem] border border-white/5 p-8">
-                            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                                <Clock className="w-5 h-5 text-gray-400" /> Recent Activity
+                        {loading ? (
+                            <p className="text-[#5A4020] text-sm" style={font}>Loading your photos…</p>
+                        ) : photos.length === 0 ? (
+                            <div className="border border-dashed border-[#C8860A]/15 flex flex-col items-center justify-center p-20 text-center"
+                                 style={{ clipPath: 'polygon(0 0, 100% 0, 100% 94%, 94% 100%, 0 100%)' }}>
+                                <ImageIcon className="w-10 h-10 text-[#3A2A10] mb-4" />
+                                <h4 className="font-bold text-[#5A4020] mb-2" style={fontDisplay}>No photos yet</h4>
+                                <p className="text-xs text-[#3A2A10] mb-6" style={font}>Submit your first entry to participate in PhotoCup 2026</p>
+                                <Link href="/submit">
+                                    <span className="px-6 py-2.5 grad-premium text-[#080300] text-xs font-bold uppercase tracking-widest glow-gold hover:opacity-90 transition-all cursor-pointer" style={font}>
+                                        Submit Now
+                                    </span>
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                                {photos.map(photo => {
+                                    const imgSrc = photoUrl(photo.file_path);
+                                    return (
+                                        <div key={photo.id} className="glass border border-[#C8860A]/12 overflow-hidden group"
+                                             style={{ clipPath: 'polygon(0 0, 100% 0, 100% 94%, 94% 100%, 0 100%)' }}>
+                                            <div className="relative h-44 bg-[#120700]">
+                                                {imgSrc ? (
+                                                    <img src={imgSrc} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={photo.title ?? ''} />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-[#3A2A10]">
+                                                        <ImageIcon className="w-12 h-12" />
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-[#080300]/60 to-transparent" />
+                                                <div className="absolute top-3 right-3">
+                                                    <span className="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider bg-[#F5A623]/80 text-[#080300]" style={font}>
+                                                        {photo.category ?? 'General'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="p-5 flex justify-between items-center">
+                                                <div>
+                                                    <h4 className="font-bold text-white" style={fontDisplay}>{photo.title ?? 'Untitled'}</h4>
+                                                    <p className="text-[10px] text-[#5A4020] uppercase tracking-[0.15em] mt-1" style={font}>
+                                                        {photo.category ?? 'General'} · {photo.created_at ? new Date(photo.created_at).toLocaleDateString() : '—'}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDelete(photo.id)}
+                                                    disabled={deleting === photo.id}
+                                                    className="p-2.5 border border-red-800/20 text-red-500/40 hover:text-red-400 hover:border-red-800/40 transition-all disabled:opacity-30"
+                                                    title="Delete photo"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* Info block */}
+                        <div className="glass border border-[#C8860A]/12 p-7 relative overflow-hidden"
+                             style={{ clipPath: 'polygon(0 0, 100% 0, 100% 96%, 97% 100%, 0 100%)' }}>
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2" style={fontDisplay}>
+                                <Clock className="w-4 h-4 text-[#F5A623]" /> Competition Timeline
                             </h3>
-                            <div className="space-y-6">
-                                <ActivityItem
-                                    title="Submission Approved"
-                                    desc="Your photo 'The Silent Enigma' has passed initial technical validation."
-                                    time="2 days ago"
-                                />
-                                <ActivityItem
-                                    title="Waitlist Updated"
-                                    desc="Mensa International updated the competition timeline."
-                                    time="1 week ago"
-                                />
-                            </div>
+                            <p className="text-sm text-[#7A6040] leading-relaxed" style={fontBody}>
+                                Submission deadline: <strong className="text-[#F5A623]">31 August 2026</strong>. Judging begins September 2026. Results published at the Mensa International Annual Gathering 2027.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -97,54 +195,3 @@ export default function UserDashboard() {
         </main>
     );
 }
-
-const SidebarLink = ({ icon, label, active = false, count = 0 }: any) => (
-    <button className={cn(
-        "w-full flex items-center justify-between p-3 rounded-xl transition-all",
-        active ? "bg-purple-500/10 text-purple-400 font-bold" : "text-gray-500 hover:text-white hover:bg-white/5"
-    )}>
-        <div className="flex items-center gap-3">
-            {React.cloneElement(icon, { size: 18 })}
-            <span className="text-sm">{label}</span>
-        </div>
-        {count > 0 && (
-            <span className="bg-purple-500 text-white text-[10px] px-2 py-0.5 rounded-full">{count}</span>
-        )}
-    </button>
-);
-
-const SubmissionCard = ({ title, status, date, img }: any) => (
-    <div className="glass rounded-[2rem] border border-white/5 overflow-hidden group">
-        <div className="relative h-48">
-            <img src={img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={title} />
-            <div className="absolute top-4 right-4">
-                <span className={cn(
-                    "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                    status === 'Approved' ? "bg-green-500 text-white" : "bg-yellow-500 text-black"
-                )}>
-                    {status}
-                </span>
-            </div>
-        </div>
-        <div className="p-6 flex justify-between items-center">
-            <div>
-                <h4 className="font-bold text-lg">{title}</h4>
-                <p className="text-xs text-gray-500 uppercase font-mono tracking-widest mt-1">Submitted: {date}</p>
-            </div>
-            <button className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-                <ExternalLink className="w-4 h-4" />
-            </button>
-        </div>
-    </div>
-);
-
-const ActivityItem = ({ title, desc, time }: any) => (
-    <div className="flex gap-4">
-        <div className="flex-shrink-0 w-1 rounded-full bg-purple-500/30" />
-        <div>
-            <h5 className="font-bold text-sm text-gray-200">{title}</h5>
-            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{desc}</p>
-            <span className="text-[10px] text-gray-700 mt-2 block font-bold uppercase tracking-widest">{time}</span>
-        </div>
-    </div>
-);

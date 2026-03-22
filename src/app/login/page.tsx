@@ -1,82 +1,146 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import Image from 'next/image';
 import { Navbar } from '@/components/Navbar';
-import { Shield, Lock, User, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Lock, User, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+
+const font = { fontFamily: 'var(--font-barlow)' };
+const fontDisplay = { fontFamily: 'var(--font-oswald)' };
+const fontBody = { fontFamily: 'var(--font-garamond)' };
+
+type FrontendRole = 'participant' | 'judge' | 'coordinator' | 'admin';
+
+const DESTINATIONS: Record<FrontendRole, string> = {
+    participant: '/dashboard',
+    judge: '/judge',
+    coordinator: '/nm-dashboard',
+    admin: '/admin',
+};
 
 export default function LoginPage() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    const { login } = useAuth();
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return;
+        setError('');
+        setLoading(true);
+        try {
+            const r = await login(email, password);
+            // Full page reload: guarantees AuthProvider re-reads localStorage before
+            // RouteGuard runs, avoiding the React state-commit race that bounced PC
+            // users back to /login.
+            window.location.href = DESTINATIONS[r] ?? '/';
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Login failed. Check credentials.');
+            setLoading(false);
+        }
+    };
+
     return (
-        <main className="min-h-screen bg-[#050505] text-white flex flex-col">
+        <main className="min-h-screen bg-[#080300] flex flex-col relative overflow-hidden" style={{ color: '#F5E0C0' }}>
+            {/* Atmospheric background */}
+            <div className="absolute inset-0 pointer-events-none">
+                <Image src="/poster2026.jpg" alt="" fill priority
+                     style={{ objectFit: 'cover', opacity: 0.1, filter: 'blur(6px) saturate(0.5)' }} />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#080300]/95 via-[#080300]/80 to-[#0D0500]/90" />
+                <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-[#F5A623]/5 rounded-full blur-[100px]" />
+                <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-[#E8760A]/04 rounded-full blur-[80px]" />
+            </div>
+
             <Navbar />
-            
-            <div className="flex-1 flex items-center justify-center p-4 pt-20">
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-md"
-                >
-                    <div className="glass p-8 rounded-[2rem] border border-white/10 shadow-2xl relative overflow-hidden">
-                        {/* Decorative background element */}
-                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
-                        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
 
-                        <div className="relative z-10">
-                            <div className="flex justify-center mb-8">
-                                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                                    <Shield className="w-10 h-10 text-purple-400" />
-                                </div>
-                            </div>
+            <div className="flex-1 flex items-center justify-center px-4 pt-20 pb-12 relative z-10">
+                <div className="w-full max-w-md">
+                    {/* Header badge */}
+                    <div className="flex items-center gap-3 justify-center mb-8 animate-fade-up">
+                        <div className="h-px w-8 bg-[#F5A623]" />
+                        <span className="text-[#F5A623] text-xs font-bold uppercase tracking-[0.3em]" style={font}>
+                            Mensa International · PhotoCup 2026
+                        </span>
+                        <div className="h-px w-8 bg-[#F5A623]" />
+                    </div>
 
-                            <div className="text-center mb-10">
-                                <h1 className="text-3xl font-bold mb-2">Mensa Sign In</h1>
-                                <p className="text-gray-400 text-sm">Access the PhotoCup 2026 platform using your official Mensa credentials.</p>
-                            </div>
+                    <div className="animate-fade-up delay-100">
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl md:text-5xl font-bold text-white mb-3" style={fontDisplay}>
+                                Sign In
+                            </h1>
+                            <p className="text-[#7A6040] text-sm" style={fontBody}>
+                                Enter your credentials to access the platform.
+                            </p>
+                        </div>
 
-                            <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-300 ml-1">Mensa ID / Email</label>
-                                    <div className="relative">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                                        <input 
-                                            type="text" 
-                                            placeholder="e.g. ES-12345"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-500/50 transition-all"
-                                        />
+                        <div className="glass border border-[#C8860A]/15 p-8 relative overflow-hidden"
+                             style={{ clipPath: 'polygon(0 0, 100% 0, 100% 96%, 96% 100%, 0 100%)' }}>
+                            <div className="absolute top-0 left-0 w-full h-0.5 grad-premium" />
+                            <div className="absolute -top-12 -right-12 w-36 h-36 rounded-full blur-3xl pointer-events-none"
+                                 style={{ background: '#F5A6230C' }} />
+
+                            <div className="relative z-10">
+                                <form className="space-y-5" onSubmit={handleLogin}>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-[#C8A070] uppercase tracking-[0.15em]" style={font}>Email</label>
+                                        <div className="relative">
+                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5A4020]" />
+                                            <input
+                                                type="email"
+                                                required
+                                                placeholder="your@email.com"
+                                                value={email}
+                                                onChange={e => setEmail(e.target.value)}
+                                                className="w-full bg-[#120700] border border-[#C8860A]/20 py-4 pl-11 pr-4 text-[#F5E0C0] placeholder-[#3A2A10] focus:outline-none focus:border-[#F5A623]/50 transition-all"
+                                                style={font}
+                                            />
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center ml-1">
-                                        <label className="text-sm font-medium text-gray-300">Password</label>
-                                        <a href="#" className="text-xs text-purple-400 hover:text-purple-300">Forgot?</a>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-[#C8A070] uppercase tracking-[0.15em]" style={font}>Password</label>
+                                        <div className="relative">
+                                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#5A4020]" />
+                                            <input
+                                                type="password"
+                                                required
+                                                placeholder="••••••••"
+                                                value={password}
+                                                onChange={e => setPassword(e.target.value)}
+                                                className="w-full bg-[#120700] border border-[#C8860A]/20 py-4 pl-11 pr-4 text-[#F5E0C0] placeholder-[#3A2A10] focus:outline-none focus:border-[#F5A623]/50 transition-all"
+                                                style={font}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                                        <input 
-                                            type="password" 
-                                            placeholder="••••••••"
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-purple-500/50 transition-all"
-                                        />
-                                    </div>
-                                </div>
 
-                                <button className="w-full py-4 rounded-xl grad-premium font-bold text-white flex items-center justify-center gap-2 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-all group">
-                                    Continue to Platform
-                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            </form>
+                                    {error && (
+                                        <p className="text-red-400 text-xs border border-red-800/30 bg-red-900/10 px-4 py-2" style={font}>
+                                            {error}
+                                        </p>
+                                    )}
 
-                            <div className="mt-8 text-center">
-                                <p className="text-gray-500 text-xs">
-                                    Secure Authentication by Mensa International IT Services.
-                                    <br />
-                                    By signing in you agree to our Security Policy.
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full py-4 grad-premium text-[#080300] font-bold uppercase tracking-widest text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 group mt-2 disabled:opacity-60 glow-gold"
+                                        style={font}
+                                    >
+                                        {loading ? 'Authenticating…' : 'Sign In'}
+                                        {!loading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
+                                    </button>
+                                </form>
+
+                                <p className="mt-6 text-center text-[#3A2A10] text-xs leading-relaxed" style={fontBody}>
+                                    Secure Authentication · Mensa International IT Services
                                 </p>
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </main>
     );

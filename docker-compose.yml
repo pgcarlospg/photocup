@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # ── Backend (FastAPI + SQLite) ──
+  backend:
+    build:
+      context: ./photocup-platform/backend
+      dockerfile: Dockerfile
+    container_name: photocup-backend
+    ports:
+      - "5001:5001"
+    volumes:
+      - backend-uploads:/app/uploads
+      - backend-db:/app/data
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-supersecretkey}
+      - DATABASE_URL=sqlite:////app/data/photocup.db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ── Frontend (Next.js) ──
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BACKEND_URL: http://backend:5001
+    container_name: photocup-frontend
+    ports:
+      - "9080:3000"
+    environment:
+      - BACKEND_URL=http://backend:5001
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  backend-uploads:
+    driver: local
+  backend-db:
+    driver: local

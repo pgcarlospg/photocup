@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+*.md
+.gitignore
+photocup-platform/backend/venv
+photocup-platform/backend/uploads
+photocup-platform/backend/photocup.db
+photocup-platform/backend/__pycache__
+winners 2025

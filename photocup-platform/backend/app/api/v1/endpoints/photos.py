@@ -7,12 +7,34 @@ from app.models.user import User, UserRole
 from app.api.deps import get_current_user
 import shutil
 import os
+from PIL import Image as PILImage
 
 router = APIRouter()
 
 UPLOAD_DIR = "uploads"
-if not os.path.exists(UPLOAD_DIR):
-    os.makedirs(UPLOAD_DIR)
+THUMB_DIR  = os.path.join(UPLOAD_DIR, "thumbs")
+THUMB_MAX  = 900   # max width/height in pixels
+THUMB_Q    = 75    # JPEG quality
+
+for _d in (UPLOAD_DIR, THUMB_DIR):
+    if not os.path.exists(_d):
+        os.makedirs(_d)
+
+
+def create_thumbnail(src_path: str) -> str | None:
+    """Resize image to THUMB_MAX px on the longest side, save as JPEG in uploads/thumbs/.
+    Returns the thumbnail path, or None on failure."""
+    try:
+        fname   = os.path.splitext(os.path.basename(src_path))[0] + ".jpg"
+        t_path  = os.path.join(THUMB_DIR, fname).replace("\\", "/")
+        with PILImage.open(src_path) as img:
+            img = img.convert("RGB")
+            img.thumbnail((THUMB_MAX, THUMB_MAX), PILImage.LANCZOS)
+            img.save(t_path, "JPEG", quality=THUMB_Q, optimize=True)
+        return t_path
+    except Exception as e:
+        print(f"Thumbnail error for {src_path}: {e}")
+        return None
 
 @router.get("/stats")
 def get_stats(db: Session = Depends(get_db)):
@@ -40,14 +62,14 @@ def get_stats(db: Session = Depends(get_db)):
                 judge_details = []
             else:
                 photo_averages = [
-                    ((s.impact or 0) + (s.technique or 0) + (s.composition or 0) + (s.story or 0)) / 4 
+                    ((s.impact or 0) + (s.story or 0) + (s.creativity or 0) + (s.composition or 0) + (s.technique or 0)) / 5 
                     for s in photo_scores
                 ]
                 avg_score = round(sum(photo_averages) / len(photo_averages), 1)
                 judge_details = []
                 for s in photo_scores:
                     judge_name = s.judge.full_name if s.judge else "Juez Invitado"
-                    judge_score = round(((s.impact or 0) + (s.technique or 0) + (s.composition or 0) + (s.story or 0)) / 4, 1)
+                    judge_score = round(((s.impact or 0) + (s.story or 0) + (s.creativity or 0) + (s.composition or 0) + (s.technique or 0)) / 5, 1)
                     judge_details.append({"name": judge_name, "score": judge_score})
             
             leaderboard.append({
@@ -68,7 +90,7 @@ def get_stats(db: Session = Depends(get_db)):
             vote_count = len(photo_scores)
             if vote_count > 0:
                 photo_averages = [
-                    ((s.impact or 0) + (s.technique or 0) + (s.composition or 0) + (s.story or 0)) / 4 
+                    ((s.impact or 0) + (s.story or 0) + (s.creativity or 0) + (s.composition or 0) + (s.technique or 0)) / 5 
                     for s in photo_scores
                 ]
                 avg_score = round(sum(photo_averages) / len(photo_averages), 1)
@@ -97,7 +119,7 @@ def get_stats(db: Session = Depends(get_db)):
             j_scores = db.query(Score).filter(Score.judge_id == j.id).all()
             count = len(j_scores)
             if count > 0:
-                avg = sum([((s.impact or 0) + (s.technique or 0) + (s.composition or 0) + (s.story or 0)) / 4 for s in j_scores]) / count
+                avg = sum([((s.impact or 0) + (s.story or 0) + (s.creativity or 0) + (s.composition or 0) + (s.technique or 0)) / 5 for s in j_scores]) / count
             else:
                 avg = 0
             judge_perf.append({
@@ -124,6 +146,81 @@ def get_stats(db: Session = Depends(get_db)):
 def get_photos(db: Session = Depends(get_db)):
     return db.query(Photo).options(joinedload(Photo.owner)).all()
 
+@router.get("/my")
+def get_my_photos(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get only the authenticated user's own photos"""
+    photos = db.query(Photo).filter(Photo.owner_id == current_user.id).all()
+    return [
+        {
+            "id": p.id,
+            "title": p.title,
+            "description": p.description,
+            "file_path": p.file_path,
+            "category": p.category,
+            "country": p.country,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+        }
+        for p in photos
+    ]
+
+@router.get("/my-evaluations")
+def get_my_evaluations(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all scores the current judge has given, with photo info"""
+    scores = db.query(Score).filter(Score.judge_id == current_user.id).all()
+    result = []
+    for s in scores:
+        photo = db.query(Photo).filter(Photo.id == s.photo_id).first()
+        result.append({
+            "score_id": s.id,
+            "photo_id": s.photo_id,
+            "photo_title": photo.title if photo else None,
+            "photo_category": photo.category if photo else None,
+            "photo_file_path": photo.file_path if photo else None,
+            "impact": s.impact,
+            "story": s.story,
+            "creativity": s.creativity,
+            "composition": s.composition,
+            "technique": s.technique,
+            "total_score": s.total_score,
+            "comment": s.comment,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+        })
+    return result
+
+@router.delete("/my/{photo_id}")
+def delete_my_photo(
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Participant deletes their own photo"""
+    photo = db.query(Photo).filter(Photo.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    if photo.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only delete your own photos")
+
+    if photo.file_path and os.path.exists(photo.file_path):
+        try:
+            os.remove(photo.file_path)
+        except Exception as e:
+            print(f"Error deleting file {photo.file_path}: {e}")
+    if photo.thumbnail_path and os.path.exists(photo.thumbnail_path):
+        try:
+            os.remove(photo.thumbnail_path)
+        except Exception as e:
+            print(f"Error deleting thumbnail {photo.thumbnail_path}: {e}")
+
+    db.delete(photo)
+    db.commit()
+    return {"message": "Photo deleted successfully"}
+
 @router.post("/upload")
 async def upload_photo(
     file: UploadFile = File(...),
@@ -136,12 +233,15 @@ async def upload_photo(
     file_path = os.path.join(UPLOAD_DIR, file.filename).replace("\\", "/")
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    
+
+    thumb_path = create_thumbnail(file_path)
+
     new_photo = Photo(
-        title=title, 
-        description=description, 
-        category=category, 
+        title=title,
+        description=description,
+        category=category,
         file_path=file_path,
+        thumbnail_path=thumb_path,
         country=current_user.country if current_user.country else "Mensa Global",
         owner_id=current_user.id
     )
@@ -155,6 +255,30 @@ async def upload_photo(
         "category": category,
         "message": "Upload successful"
     }
+
+@router.post("/generate-thumbs")
+def generate_thumbs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Admin: generate/regenerate thumbnails for all photos that don't have one."""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admins only")
+    photos = db.query(Photo).all()
+    done = skipped = errors = 0
+    for p in photos:
+        if not p.file_path or not os.path.exists(p.file_path):
+            errors += 1
+            continue
+        t = create_thumbnail(p.file_path)
+        if t:
+            p.thumbnail_path = t
+            done += 1
+        else:
+            errors += 1
+    db.commit()
+    return {"generated": done, "skipped": skipped, "errors": errors}
+
 
 @router.get("/judges")
 def get_judges():
@@ -216,9 +340,10 @@ def get_judge_evaluations(judge_id: int, db: Session = Depends(get_db)):
             "photo_author": score.photo.owner.full_name if score.photo.owner else "Anónimo",
             "category": score.photo.category if score.photo.category else "General",
             "impact": score.impact,
-            "technique": score.technique,
-            "composition": score.composition,
             "story": score.story,
+            "creativity": score.creativity,
+            "composition": score.composition,
+            "technique": score.technique,
             "avg_score": avg_score,
             "comment": score.comment if score.comment else ""
         })
@@ -236,47 +361,45 @@ def get_judge_evaluations(judge_id: int, db: Session = Depends(get_db)):
 @router.post("/{photo_id}/score")
 def score_photo(
     photo_id: int,
-    impact: int = Form(...),
-    technique: int = Form(...),
-    composition: int = Form(...),
-    story: int = Form(...),
+    impact: int = Form(...),       # Relevance to Theme
+    story: int = Form(...),        # Emotional Impact
+    creativity: int = Form(...),   # Creativity & Original Vision
+    composition: int = Form(...),  # Composition & Visual Balance
+    technique: int = Form(...),    # Technical Execution
     comment: str = Form(""),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    print(f"DEBUG: Receiving score for photo {photo_id} from user {current_user.id}")
-    total = (impact + technique + composition + story) / 4
-    
-    # Update or create logic
+    total = (impact + story + creativity + composition + technique) / 5
+
     existing_score = db.query(Score).filter(
-        Score.photo_id == photo_id, 
+        Score.photo_id == photo_id,
         Score.judge_id == current_user.id
     ).first()
-    
+
     if existing_score:
-        print(f"DEBUG: Updating existing score {existing_score.id}")
         existing_score.impact = impact
-        existing_score.technique = technique
-        existing_score.composition = composition
         existing_score.story = story
+        existing_score.creativity = creativity
+        existing_score.composition = composition
+        existing_score.technique = technique
         existing_score.total_score = total
         existing_score.comment = comment
     else:
-        print(f"DEBUG: Creating new score")
         new_score = Score(
             photo_id=photo_id,
             impact=impact,
-            technique=technique,
-            composition=composition,
             story=story,
+            creativity=creativity,
+            composition=composition,
+            technique=technique,
             total_score=total,
             comment=comment,
             judge_id=current_user.id
         )
         db.add(new_score)
-    
+
     db.commit()
-    print(f"DEBUG: Total scores in DB now: {db.query(Score).count()}")
     return {"status": "success", "total_score": total}
 
 @router.delete("/remove-item/{photo_id}")
@@ -341,7 +464,7 @@ def get_coordinator_country_photos(
         vote_count = len(photo_scores)
         if vote_count > 0:
             avg_score = round(sum(
-                ((s.impact or 0) + (s.technique or 0) + (s.composition or 0) + (s.story or 0)) / 4 
+                ((s.impact or 0) + (s.story or 0) + (s.creativity or 0) + (s.composition or 0) + (s.technique or 0)) / 5 
                 for s in photo_scores
             ) / vote_count, 1)
         else:
@@ -404,7 +527,7 @@ def get_coordinator_stats(
         photo_scores = db.query(Score).filter(Score.photo_id == p.id).all()
         if photo_scores:
             avg_score = round(sum(
-                ((s.impact or 0) + (s.technique or 0) + (s.composition or 0) + (s.story or 0)) / 4 
+                ((s.impact or 0) + (s.story or 0) + (s.creativity or 0) + (s.composition or 0) + (s.technique or 0)) / 5 
                 for s in photo_scores
             ) / len(photo_scores), 1)
         else:
@@ -480,12 +603,15 @@ async def coordinator_upload_photo(
     file_path = os.path.join(UPLOAD_DIR, file.filename).replace("\\", "/")
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    
+
+    thumb_path = create_thumbnail(file_path)
+
     new_photo = Photo(
-        title=title, 
-        description=description, 
-        category=category, 
+        title=title,
+        description=description,
+        category=category,
         file_path=file_path,
+        thumbnail_path=thumb_path,
         country=current_user.country,
         owner_id=participant.id
     )

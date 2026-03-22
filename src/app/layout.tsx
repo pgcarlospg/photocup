@@ -1,20 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Oswald, Barlow_Condensed, EB_Garamond } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const oswald = Oswald({
+  variable: "--font-oswald",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const ebGaramond = EB_Garamond({
+  variable: "--font-garamond",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "Mensa PhotoPlatform | Enigma in Chaos",
-  description: "Official platform for PhotoCup and PhotoOlimpic annual photography events.",
+  title: "PhotoCup 2026 | Spark of Evolution",
+  description: "Official Mensa International platform for PhotoCup 2026. Spark of Evolution — the essential impulse that drives beings, systems, or ideas to adapt, improve, or transform over time.",
 };
 
 export default function RootLayout({
@@ -25,9 +34,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#050505] text-white`}
+        className={`${oswald.variable} ${barlowCondensed.variable} ${ebGaramond.variable} antialiased bg-[#080300]`}
+        style={{ fontFamily: "var(--font-barlow), sans-serif" }}
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

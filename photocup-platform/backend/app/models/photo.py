@@ -31,12 +31,13 @@ class Score(Base):
     photo_id = Column(Integer, ForeignKey("photos.id"))
     judge_id = Column(Integer, ForeignKey("users.id"))
     
-    # Criteria-based scores (configurable)
-    impact = Column(Integer)
-    technique = Column(Integer)
-    composition = Column(Integer)
-    story = Column(Integer)
-    
+    # Judging criteria — PhotoCup 2025/2026
+    impact = Column(Integer)       # Relevance to Theme
+    story = Column(Integer)        # Emotional Impact
+    creativity = Column(Integer)   # Creativity & Original Vision
+    composition = Column(Integer)  # Composition & Visual Balance
+    technique = Column(Integer)    # Technical Execution
+
     total_score = Column(Float)
     comment = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)

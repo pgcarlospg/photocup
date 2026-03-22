@@ -2,74 +2,71 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Cinematic Dark — PhotoCup 2026: The Spark of Evolution */
+    --background: 15 100% 2%;        /* #080300 near-black warm */
+    --foreground: 38 80% 88%;        /* #F5E0C0 warm cream */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 20 100% 4%;              /* #140500 elevated surface */
+    --card-foreground: 38 80% 88%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 15 100% 3%;
+    --popover-foreground: 38 80% 88%;
 
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 36 90% 42%;           /* #C8860A gold */
+    --primary-foreground: 15 100% 4%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 25 70% 12%;         /* deep earth surface */
+    --secondary-foreground: 38 80% 88%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 20 50% 8%;
+    --muted-foreground: 38 30% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 32 95% 51%;            /* #F5A623 amber fire */
+    --accent-foreground: 15 100% 4%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 38 80% 88%;
 
-    --border: 214.3 32.1% 91.4%;
-    --input: 214.3 32.1% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --border: 25 40% 14%;
+    --input: 25 40% 14%;
+    --ring: 36 90% 42%;
 
     --radius: 0.75rem;
+
+    --gold: 36 90% 42%;
+    --gold-light: 32 95% 62%;
+    --ember: 22 90% 45%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
+    --background: 15 100% 2%;
+    --foreground: 38 80% 88%;
+    --card: 20 100% 4%;
+    --card-foreground: 38 80% 88%;
+    --popover: 15 100% 3%;
+    --popover-foreground: 38 80% 88%;
+    --primary: 36 90% 42%;
+    --primary-foreground: 15 100% 4%;
+    --secondary: 25 70% 12%;
+    --secondary-foreground: 38 80% 88%;
+    --muted: 20 50% 8%;
+    --muted-foreground: 38 30% 50%;
+    --accent: 32 95% 51%;
+    --accent-foreground: 15 100% 4%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
-    
-    --gold: 43 100% 50%;
-    --gold-foreground: 222.2 47.4% 11.2%;
+    --destructive-foreground: 38 80% 88%;
+    --border: 25 40% 14%;
+    --input: 25 40% 14%;
+    --ring: 36 90% 42%;
+    --gold: 36 90% 42%;
+    --gold-light: 32 95% 62%;
+    --ember: 22 90% 45%;
   }
 }
 
 @layer base {
   * {
-    border-color: var(--border);
+    border-color: hsl(var(--border));
   }
   body {
     background-color: hsl(var(--background));
@@ -78,23 +75,22 @@
   }
 }
 
-/* Glassmorphism utility */
+/* Glassmorphism — warm tinted for cinematic feel */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(20, 8, 0, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(200, 134, 10, 0.12);
 }
 
-.dark .glass {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* Premium Gradients */
+/* Premium Gold/Amber Gradient — replaces purple */
 .grad-premium {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-  -webkit-background-clip: border-box; /* default */
+  background: linear-gradient(135deg, #C8860A 0%, #F5A623 50%, #E8760A 100%);
+}
+
+/* Ember fire gradient */
+.grad-ember {
+  background: linear-gradient(135deg, #8B2E00 0%, #C8560A 50%, #F5A623 100%);
 }
 
 .text-gradient {
@@ -105,5 +101,82 @@
 }
 
 .grad-gold {
-  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  background: linear-gradient(135deg, #C8860A 0%, #F5A623 60%, #FFD166 100%);
 }
+
+/* Atmospheric glow effects */
+.glow-gold {
+  box-shadow: 0 0 30px rgba(200, 134, 10, 0.35), 0 0 80px rgba(245, 166, 35, 0.15);
+}
+
+.glow-ember {
+  box-shadow: 0 0 30px rgba(232, 118, 10, 0.4), 0 0 60px rgba(200, 86, 10, 0.2);
+}
+
+/* Diagonal section divider */
+.diagonal-cut {
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
+}
+
+.diagonal-cut-reverse {
+  clip-path: polygon(0 0, 100% 6%, 100% 100%, 0 100%);
+}
+
+/* Grain overlay for cinematic texture */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+}
+
+/* Animated amber pulse */
+@keyframes ember-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(1.08); }
+}
+
+.animate-ember {
+  animation: ember-pulse 4s ease-in-out infinite;
+}
+
+/* Staggered fade-up (slide + fade) */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s ease-out both;
+}
+
+/* Fade-in from left */
+@keyframes fade-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-fade-left {
+  animation: fade-left 0.6s ease-out both;
+}
+
+/* Pure opacity fade (no transform) */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out both;
+}
+
+.delay-0   { animation-delay: 0ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-550 { animation-delay: 550ms; }
+.delay-600 { animation-delay: 600ms; }
